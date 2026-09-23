@@ -1,0 +1,25 @@
+{
+  "name": "gemini-cad-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for Optical Photo-to-CAD, Parametric OpenSCAD synthesis, and 3D Printable STL generation",
+  "main": "index.js",
+  "bin": {
+    "gemini-cad-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test/run-tests.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gemini",
+    "cad",
+    "openscad",
+    "3d-printing",
+    "stl",
+    "photo-to-cad"
+  ],
+  "author": "Daniel Elliott (ssfdre38)",
+  "license": "MIT"
+}
