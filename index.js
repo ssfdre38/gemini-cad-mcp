@@ -416,11 +416,27 @@ Gemini CAD MCP Server v${SERVER_VERSION}
 Model Context Protocol for Optical Photo-to-CAD & 3D Print Generation
 
 Usage:
-  node index.js               Run standard MCP server on stdio
+  node index.js               Run standard MCP server on stdio (Claude, Antigravity)
+  node index.js --http        Run MCP HTTP & SSE server on port 18888 (Gemini App URL)
+  node index.js --port 8080   Run HTTP & SSE server on custom port
   node index.js --check       Check host environment & OpenSCAD detection
   node index.js --demo        Generate a sample TV remote battery cover in ./output
 `);
     process.exit(0);
+  }
+
+  // HTTP & SSE Server mode
+  const portIndex = args.indexOf("--port");
+  const customPort = portIndex !== -1 && args[portIndex + 1] ? Number(args[portIndex + 1]) : null;
+
+  if (args.includes("--http") || args.includes("--sse") || customPort || process.env.PORT) {
+    const { McpHttpServer } = require("./lib/http-server.js");
+    const server = new McpHttpServer({ port: customPort });
+    server.start().catch((err) => {
+      console.error("Failed to start HTTP server:", err);
+      process.exit(1);
+    });
+    return;
   }
 
   if (args.includes("--check")) {

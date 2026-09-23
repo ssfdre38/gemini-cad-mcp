@@ -100,6 +100,28 @@ In `%APPDATA%\Claude\claude_desktop_config.json`:
 }
 ```
 
+### Connect via HTTP / SSE URL (Gemini App & Web Clients)
+
+Start the HTTP & SSE server on port `18888`:
+```bash
+npm run start:http
+# or: node index.js --http
+# or: node index.js --port 8080
+```
+
+* **MCP SSE URL**: `http://127.0.0.1:18888/sse` (or `http://localhost:18888/sse`)
+* **Direct JSON-RPC Endpoint**: `http://127.0.0.1:18888/mcp`
+* **Health & Diagnostics**: `http://127.0.0.1:18888/health`
+* **Direct File Downloads**: `http://127.0.0.1:18888/download/<filename>`
+
+#### For Cloud Gemini App / Remote Clients (Public HTTPS URL):
+If the Gemini App requires a public HTTPS URL:
+```bash
+npx --yes localtunnel --port 18888
+# Yields: https://<subdomain>.loca.lt/sse
+```
+Pass `https://<subdomain>.loca.lt/sse` into the Gemini App MCP connection field.
+
 ---
 
 ## 🧪 Testing & Verification

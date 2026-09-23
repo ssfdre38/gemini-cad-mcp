@@ -247,6 +247,80 @@ async function run() {
     assert.strictEqual(res.referenceMm, 24.26);
   });
 
+  // Suite 8: MCP HTTP & SSE Transport Server
+  console.log("\n\x1b[1m[Suite 8: MCP HTTP & SSE Transport Server]\x1b[0m");
+
+  await itAsync("Boots McpHttpServer, responds to /health, /mcp, and /sse", async () => {
+    const http = require("http");
+    const { McpHttpServer } = require("../lib/http-server.js");
+    const server = new McpHttpServer({ port: 18899 });
+    await server.start();
+
+    try {
+      // 1. Check /health
+      const healthData = await new Promise((resolve, reject) => {
+        http.get("http://127.0.0.1:18899/health", (res) => {
+          let body = "";
+          res.on("data", c => body += c);
+          res.on("end", () => resolve(JSON.parse(body)));
+        }).on("error", reject);
+      });
+
+      assert.strictEqual(healthData.status, "healthy");
+      assert.strictEqual(healthData.server, "gemini-cad-mcp");
+      assert.strictEqual(healthData.toolsCount, 7);
+
+      // 2. Direct JSON-RPC POST /mcp
+      const rpcResult = await new Promise((resolve, reject) => {
+        const postReq = http.request("http://127.0.0.1:18899/mcp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        }, (res) => {
+          let body = "";
+          res.on("data", c => body += c);
+          res.on("end", () => resolve(JSON.parse(body)));
+        });
+        postReq.on("error", reject);
+        postReq.write(JSON.stringify({
+          jsonrpc: "2.0",
+          method: "tools/list",
+          id: 101
+        }));
+        postReq.end();
+      });
+
+      assert.strictEqual(rpcResult.id, 101);
+      assert(Array.isArray(rpcResult.result.tools));
+      assert.strictEqual(rpcResult.result.tools.length, 7);
+
+      // 3. Connect to /sse
+      const sseEndpoint = await new Promise((resolve, reject) => {
+        const sseReq = http.get("http://127.0.0.1:18899/sse", (res) => {
+          assert.strictEqual(res.statusCode, 200);
+          assert.strictEqual(res.headers["content-type"], "text/event-stream");
+          res.on("data", (chunk) => {
+            const str = chunk.toString("utf8");
+            if (str.includes("event: endpoint")) {
+              const match = str.match(/data:\s*([^\r\n]+)/);
+              if (match) {
+                sseReq.destroy();
+                resolve(match[1]);
+              }
+            }
+          });
+        });
+        sseReq.on("error", (err) => {
+          // Socket hangup after destroy is normal
+          if (err.code !== "ECONNRESET") reject(err);
+        });
+      });
+
+      assert(sseEndpoint.includes("/message?sessionId="));
+    } finally {
+      await server.stop();
+    }
+  });
+
   console.log("\n=======================================================");
   console.log(`   TEST RESULTS: ${passedTests}/${totalTests} PASSED (${failedTests} FAILED)`);
   console.log("=======================================================\n");

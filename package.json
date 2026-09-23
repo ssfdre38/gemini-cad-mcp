@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node index.js",
+    "start:http": "node index.js --http",
     "test": "node test/run-tests.js"
   },
   "keywords": [
